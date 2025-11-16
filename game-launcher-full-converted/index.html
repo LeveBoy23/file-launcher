@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Console Game Launcher</title>
+  
+<link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+  <canvas id="matrix-bg"></canvas>
+
+  <div id="password-modal">
+    <div>Enter Admin Password:</div>
+    <input type="password" id="admin-password-input" />
+  </div>
+  
+  <!-- Login Modal -->
+  <div id="login-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:10001;">
+    <div style="background:var(--panel-bg);border:3px solid var(--accent);border-radius:10px;padding:30px;width:400px;box-shadow:0 0 30px var(--accent);">
+      <h2 style="color:var(--accent);text-align:center;margin:0 0 20px 0;">Login to Game Launcher</h2>
+      <div id="login-form">
+        <input type="email" id="login-email" placeholder="Email" style="width:100%;padding:10px;margin-bottom:15px;background:#000;color:var(--accent);border:2px solid var(--accent);border-radius:4px;font-family:'Courier New';">
+        <input type="password" id="login-password" placeholder="Password" style="width:100%;padding:10px;margin-bottom:10px;background:#000;color:var(--accent);border:2px solid var(--accent);border-radius:4px;font-family:'Courier New';">
+        <input type="text" id="login-username" placeholder="Username (for chat, used on Sign Up)" style="width:100%;padding:10px;margin-bottom:20px;background:#000;color:var(--accent);border:2px solid var(--accent);border-radius:4px;font-family:'Courier New';">
+        <div style="display:flex;gap:10px;">
+          <button id="login-submit-btn" style="flex:1;padding:12px;background:#003300;border:2px solid var(--accent);color:var(--accent);border-radius:4px;font-family:'Courier New';font-weight:bold;cursor:pointer;">Login</button>
+          <button id="signup-btn" style="flex:1;padding:12px;background:#003300;border:2px solid var(--accent);color:var(--accent);border-radius:4px;font-family:'Courier New';font-weight:bold;cursor:pointer;">Sign Up</button>
+        </div>
+        <button id="login-cancel-btn" style="width:100%;padding:8px;margin-top:10px;background:#330000;border:2px solid #ff3333;color:#ff3333;border-radius:4px;font-family:'Courier New';cursor:pointer;">Cancel</button>
+      </div>
+      <div id="login-status" style="margin-top:15px;text-align:center;color:var(--muted);font-size:14px;"></div>
+    </div>
+  </div>
+
+  <div id="container">
+    <header>
+      <h1>Game Launcher</h1>
+      <div style="position:absolute;right:70px;top:14px;display:flex;gap:10px;align-items:center;">
+        <button id="login-btn" style="background:none;border:2px solid var(--accent);color:var(--accent);padding:8px 12px;border-radius:6px;cursor:pointer;font-family:'Courier New';font-weight:bold;">Login</button>
+        <div id="user-info" style="display:none;color:var(--accent);font-size:14px;">Welcome, <span id="user-name"></span> | <button id="logout-btn" style="background:none;border:none;color:var(--accent);cursor:pointer;text-decoration:underline;">Logout</button></div>
+      </div>
+      <button id="chat-btn" title="Open Chat">💬</button>
+      <button id="settings-btn" title="Settings">⚙️</button>
+    </header>
+    
+    <div id="top-area">
+      <div id="editor-wrapper">
+        <textarea id="code-input" placeholder="Paste your full HTML/JS/CSS code here..."></textarea>
+        <div class="button-row">
+          <button id="run-btn">Run Game</button>
+          <button id="run-newtab-btn">Run in New Tab</button>
+        </div>
+      </div>
+      <div id="preview-container">
+        <button id="fullscreen-btn" title="Fullscreen">&#x26F6;</button>
+<button id="exit-fullscreen-btn" style="display: none; position: fixed; top: 10px; right: 10px; z-index: 10000; padding: 8px 12px; background: #330000; color: #ff3333; border: 2px solid #ff3333; border-radius: 4px; font-weight: bold; font-family: 'Courier New', monospace; cursor: pointer; box-shadow: 0 0 10px rgba(255, 51, 51, 0.5);">Exit Fullscreen</button>
+
+      </div>
+    </div>
+    <div id="bottom-panel">
+      <input type="text" id="search-input" placeholder="Search games..." />
+      <div id="category-buttons">
+        <button class="category-btn active" data-category="">All</button>
+        <button class="category-btn" data-category="Arcade">Arcade</button>
+        <button class="category-btn" data-category="Sports">Sports</button>
+        <button class="category-btn" data-category="Puzzle">Puzzle</button>
+        <button class="category-btn" data-category="Action">Action</button>
+        <button class="category-btn" data-category="Strategy">Strategy</button>
+      </div>
+      
+      <!-- Favorites section -->
+      <div id="favorites-section" style="margin-bottom:15px;">
+        <div style="display:flex;align-items:center;margin-bottom:10px;color:var(--accent);">
+          <span style="font-size:18px;font-weight:bold;">★ Favorites</span>
+          <span id="favorites-count" style="margin-left:8px;color:var(--muted);font-size:14px;">(0)</span>
+        </div>
+        <div id="favorites-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:10px;"></div>
+      </div>
+      
+      <!-- Recently Played section -->
+      <div id="recent-section" style="margin-bottom:15px;">
+        <div style="display:flex;align-items:center;margin-bottom:10px;color:var(--accent);">
+          <span style="font-size:18px;font-weight:bold;">🕘 Recently Played</span>
+          <span id="recent-count" style="margin-left:8px;color:var(--muted);font-size:14px;">(0)</span>
+        </div>
+        <div id="recent-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:10px;"></div>
+      </div>
+      
+      <!-- Session info -->
+      <div id="session-info" style="margin-bottom:15px;padding:10px;background:var(--panel-bg);border:1px solid var(--accent);border-radius:6px;display:none;">
+        <div style="color:var(--accent);font-weight:bold;">Current Session</div>
+        <div style="color:var(--muted);font-size:14px;">
+          Game: <span id="session-game">None</span><br/>
+          Time: <span id="session-time">00:00:00</span>
+        </div>
+      </div>
+      
+      <div id="game-list">Loading games...</div>
+    </div>
+
+    
+    <div id="admin-panel">
+      <div id="admin-panel-content">
+        <h2>🎮 Admin Control Panel 🎮</h2>
+        
+        <div class="admin-section">
+          <h3>Add New Game</h3>
+          <input id="game-name" placeholder="Game Name" />
+          <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+            <select id="game-category-select" style="flex: 1; background: #000; color: var(--accent); border: 2px solid var(--accent); border-radius: 4px; font-family: 'Courier New', monospace; padding: 8px;" multiple size="4">
+              <option value="">Select category...</option>
+            </select>
+            <button id="show-add-category-btn" style="flex-shrink: 0; padding: 8px 12px; cursor: pointer;">Add Category</button>
+          </div>
+          
+          <div id="new-category-container" style="display: none; margin-bottom: 10px;">
+            <input id="new-category-input" placeholder="New category name" style="width: 100%; background: #000; color: var(--accent); border: 2px solid var(--accent); border-radius: 4px; font-family: 'Courier New', monospace; padding: 8px;" />
+            <button id="add-category-btn" style="margin-top: 5px; padding: 8px 12px; cursor: pointer;">Add</button>
+          </div>
+          
+          <textarea id="game-code" placeholder="Paste full HTML game code..." rows="6"></textarea>
+          <button id="add-game-btn">Add Game</button>
+        </div>
+        
+        <div class="admin-section">
+          <h3>Game Management</h3>
+          <button id="edit-games-btn">Edit/Delete Games</button>
+          <button id="refresh-games-btn">Refresh Games List</button>
+          <button id="export-games-btn">Export Games Data</button>
+          <button id="test-connection-btn">Test Database Connection</button>
+        </div>
+        
+        <div class="admin-section" id="edit-games-section" style="display: none;">
+          <h3>Edit/Delete Games</h3>
+          <select id="game-select" style="width: 100%; padding: 8px; background: #000; color: var(--accent); border: 2px solid var(--accent); border-radius: 4px; margin-bottom: 10px;">
+            <option value="">Select a game to edit...</option>
+          </select>
+          <div id="edit-form" style="display: none;">
+            <input id="edit-game-name" placeholder="Game Name" />
+            <select id="edit-game-category-select" multiple size="4" style="width:100%; margin-top:8px; background:#000; color:var(--accent); border:2px solid var(--accent); border-radius:4px; font-family:'Courier New', monospace; padding:8px;">
+            </select>
+            <textarea id="edit-game-code" placeholder="Game Code..." rows="4"></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <button id="update-game-btn">Update Game</button>
+              <button id="delete-game-btn" style="background: #330000 !important; border-color: #ff3333 !important; color: #ff3333 !important;">Delete Game</button>
+              <button id="cancel-edit-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="admin-section">
+          <button id="close-admin-btn">Close Admin Panel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirmation-modal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); 
+    justify-content: center; align-items: center; z-index: 11000;">
+  <div style="background: #001100; border: 2px solid var(--accent); border-radius: 8px; padding: 20px; width: 320px; text-align: center; box-shadow: 0 0 20px var(--accent);">
+    <p style="color:var(--accent); font-size: 18px; margin-bottom: 20px;" id="delete-confirm-message">Are you sure you want to delete this game?</p>
+    <button id="confirm-delete-btn" style="margin-right: 10px; background:#330000; border-color:#ff3333; color:#ff3333; padding: 8px 15px; border-radius:4px; cursor:pointer;">Delete</button>
+    <button id="cancel-delete-btn" style="background:#003300; border-color:var(--accent); color:var(--accent); padding: 8px 15px; border-radius:4px; cursor:pointer;">Cancel</button>
+  </div>
+</div>
+
+  <!-- Settings overlay & panel -->
+  <div id="settings-overlay"></div>
+  
+  <aside id="settings-panel" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h2>Themes & Appearance</h2>
+      <button id="close-settings" style="background:#330000;border:2px solid #ff3333;color:#ff3333;padding:6px;border-radius:6px">Close</button>
+    </div>
+
+    <div class="settings-section" id="theme-section">
+      <div class="label">Pick a theme</div>
+      <div class="swatches">
+        <div class="swatch" data-theme="matrix" id="swatch-matrix" title="Matrix">0s/1s</div>
+        <div class="swatch" data-theme="crt" id="swatch-crt" title="CRT Retro">CRT</div>
+        <div class="swatch" data-theme="neon" id="swatch-neon" title="Neon Cyberpunk">NEON</div>
+        <div class="swatch" data-theme="pixel" id="swatch-pixel" title="Arcade Pixel">PIX</div>
+        <div class="swatch" data-theme="stealth" id="swatch-stealth" title="Stealth">STEALTH</div>
+        <div class="swatch" data-theme="dynamic" id="swatch-dynamic" title="Dynamic Wallpaper">DYN</div>
+      </div>
+
+      <div id="matrix-controls" style="margin-top:10px;display:none">
+        <div class="label">Matrix speed</div>
+        <input type="range" id="matrix-speed" min="1" max="12" value="6" />
+        <div style="height:6px"></div>
+        <div class="label">Matrix color</div>
+        <input type="color" id="matrix-color" value="#33ff33" />
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="label">UI Controls</div>
+      <div style="margin-bottom:8px">Card size</div>
+      <div class="row" style="margin-bottom:8px">
+        <select id="card-size">
+          <option value="small">Small</option>
+          <option value="medium" selected>Medium</option>
+          <option value="large">Large</option>
+        </select>
+        <label style="margin-left:auto; color:var(--muted)"><input type="checkbox" id="toggle-animations" checked/> Animations</label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="label">Sound & Music</div>
+      <label><input type="checkbox" id="toggle-sfx" checked/> UI sound effects</label><br/>
+      <label style="display:block;margin-top:8px">Background music: <select id="bg-music"><option value="none">None</option><option value="ambient1">Ambient 1</option><option value="ambient2">Ambient 2</option></select></label>
+      <div id="music-status" style="color:var(--muted);font-size:12px;margin-top:8px">Music plays only when no game iframe is active.</div>
+    </div>
+
+    <div class="settings-section">
+      <div class="label">Gameplay Features</div>
+      <label><input type="checkbox" id="show-favorites" checked/> Show favorites section</label><br/>
+      <label><input type="checkbox" id="show-recent" checked/> Show recently played</label><br/>
+      <label><input type="checkbox" id="track-playtime" checked/> Track play time & counts</label>
+      <div style="margin-top:8px;">
+        <button id="clear-recent-btn" style="font-size:12px;padding:4px 8px;">Clear Recent</button>
+        <button id="clear-favorites-btn" style="font-size:12px;padding:4px 8px;">Clear Favorites</button>
+      </div>
+    </div>
+    
+    <div class="settings-section">
+      <div class="label">Performance & Cache</div>
+      <label><input type="checkbox" id="offline-mode" /> Enable offline mode</label><br/>
+      <label><input type="checkbox" id="preload-games" /> Preload selected games</label>
+      <div style="margin-top:8px;color:var(--muted);font-size:12px;">
+        <div>Cache status: <span id="cache-status">Not cached</span></div>
+        <button id="clear-cache-btn" style="font-size:12px;padding:4px 8px;margin-top:4px;">Clear Cache</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="label">Persistence</div>
+      <div id="pref-save-status" style="color:var(--muted)">Loading preference status...</div>
+    </div>
+  </aside>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  
+
+  <!-- Access Agreement Overlay (scoped styles to avoid leaking) -->
+  
+
+  <div id="tos-overlay">
+    <canvas id="rain"></canvas>
+    <div class="shell">
+      <section class="panel">
+        <header class="hdr">
+          <div class="sig">ACCESS AGREEMENT</div>
+          <div class="badge">Legalese v2.0</div>
+        </header>
+        <main class="body">
+          <div class="callout warn">
+            <strong>Out-of-School Use Only:</strong> By proceeding, you affirm that you are <em>not</em> on school property, not connected to a school network, not using a school-issued device, and not within any class or instructional period. If you are, stop here.
+          </div>
+          <h2>1. Acceptance of Terms</h2>
+          <p>By clicking “I Agree,” scrolling past this notice, or otherwise interacting with this page, you agree to be legally bound by these Terms of Service, regardless of whether you have read them. Failure to read them is not a defense.</p>
+          <h2>2. User Responsibility</h2>
+          <ul>
+            <li>You acknowledge full personal liability for any misuse of this page, including but not limited to violations of school rules, workplace codes of conduct, or parental expectations.</li>
+            <li>You accept that disciplinary consequences (detention, suspension, confiscation of devices, calls home, awkward parent-teacher conferences) are entirely your responsibility.</li>
+            <li>You confirm that you are using this resource strictly for entertainment or utility purposes in your own personal time, outside institutional contexts.</li>
+          </ul>
+          <h2>3. Misuse and Prohibited Activities</h2>
+          <p>You agree not to:</p>
+          <ul>
+            <li>Employ this page to bypass network filters, firewalls, or monitoring systems.</li>
+            <li>Disrupt any classroom, exam, or study environment by using or distributing this resource.</li>
+            <li>Share this page with the intent of encouraging others to break school rules.</li>
+            <li>Hold the creators liable if you ignore all of the above.</li>
+          </ul>
+          <h2>4. Disclaimer of Warranties</h2>
+          <p>This service is provided “AS IS” and “WITH ALL FAULTS.” We disclaim all warranties, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or compatibility with school IT policies.</p>
+          <h2>5. Limitation of Liability</h2>
+          <p>In no event shall we be liable for:</p>
+          <ul>
+            <li>Loss of academic standing, grades, privileges, or electronics.</li>
+            <li>Detentions, suspensions, expulsions, or “the look” from a disappointed teacher.</li>
+            <li>Groundings, phone confiscations, or general parental rage.</li>
+            <li>Existential dread, boredom, or loss of motivation to do homework.</li>
+          </ul>
+          <h2>6. Indemnification</h2>
+          <p>You agree to indemnify and hold harmless the creators, contributors, and distributors of this page from any and all claims, damages, fines, disciplinary actions, or awkward explanations you may face as a result of misuse.</p>
+          <h2>7. Arbitration and Dispute Resolution</h2>
+          <p>All disputes shall be resolved by binding arbitration conducted in a location chosen by the creators, which may include but is not limited to: a random Discord call, a coin flip, or rock-paper-scissors. Class-action lawsuits are expressly waived.</p>
+          <h2>8. Severability</h2>
+          <p>If any provision of these Terms is found unenforceable, the rest still applies. Even if most of this text is nonsense legalese, the parts about “not at school” remain binding.</p>
+          <h2>9. Entire Agreement</h2>
+          <p>This document constitutes the full and complete agreement between you and this page. No verbal assurances, hallway gossip, or “but my friend said it was fine” excuses override it.</p>
+          <div class="callout">
+            <strong>Summary (still binding):</strong> This is not for school. If you use it at school, you accept all consequences. We are not responsible for anything that happens. Your misuse, your problem.
+          </div>
+        </main>
+        <footer class="ftr">
+          <button id="btn-hide" class="btn-danger">Do not show again</button>
+          <button id="btn-agree" class="btn-primary">I Agree</button>
+        </footer>
+        <div class="scan"></div>
+      </section>
+    </div>
+  </div>
+
+  
+
+<script src="scripts/main.js"></script>
+</body>
+</html>
